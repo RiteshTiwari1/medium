@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { sign } from 'hono/jwt'
 import { signupInput, signinInput } from "@ritesh_01/medium-common";
+import { use } from "hono/jsx";
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -13,14 +14,14 @@ export const userRouter = new Hono<{
 
 userRouter.post('/signup', async (c) => {
     const body = await c.req.json();
-    // const { success } = signupInput.safeParse(body);
+    const { success } = signupInput.safeParse(body);
 
-    // if (!success) {
-    //     c.status(411);
-    //     return c.json({
-    //         message: "Inputs not correct"
-    //     })
-    // }
+    if (!success) {
+        c.status(411);
+        return c.json({
+            message: "Inputs not correct"
+        })
+    }
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL,
     }).$extends(withAccelerate())
@@ -33,12 +34,16 @@ userRouter.post('/signup', async (c) => {
           name: body.name
         }
       });
-      console.log(user);
+      // console.log(user);
       const jwt = await sign({
         id: user.id
       }, c.env.JWT_SECRET);
   
-      return c.text(jwt)
+      return c.json({
+        token:jwt,
+        name:user.name,
+        username:user.username,
+      })
     } catch(e) {
       console.log(e);
       c.status(411);
@@ -49,13 +54,13 @@ userRouter.post('/signup', async (c) => {
   
   userRouter.post('/signin', async (c) => {
     const body = await c.req.json();
-    // const { success } = signinInput.safeParse(body);
-    // if (!success) {
-    //     c.status(411);
-    //     return c.json({
-    //         message: "Inputs not correct"
-    //     })
-    // }
+    const { success } = signinInput.safeParse(body);
+    if (!success) {
+        c.status(411);
+        return c.json({
+            message: "Inputs not correct"
+        })
+    }
 
     const prisma = new PrismaClient({
       datasourceUrl: c.env.DATABASE_URL,
@@ -78,7 +83,11 @@ userRouter.post('/signup', async (c) => {
         id: user.id
       }, c.env.JWT_SECRET);
   
-      return c.text(jwt)
+      return c.json({
+        token:jwt,
+        name:user.name,
+        username:user.username,
+      })
     } catch(e) {
       console.log(e);
       c.status(411);

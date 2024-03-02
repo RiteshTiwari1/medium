@@ -37,13 +37,13 @@ blogRouter.use("/*", async (c, next) => {
 
 blogRouter.post('/', async (c) => {
     const body = await c.req.json();
-    // const { success } = createBlogInput.safeParse(body);
-    // if (!success) {
-    //     c.status(411);
-    //     return c.json({
-    //         message: "Inputs not correct"
-    //     })
-    // }
+    const { success } = createBlogInput.safeParse(body);
+    if (!success) {
+        c.status(411);
+        return c.json({
+            message: "Inputs not correct"
+        })
+    }
 
     const authorId = c.get("userId");
     const prisma = new PrismaClient({
